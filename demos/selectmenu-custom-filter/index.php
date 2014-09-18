@@ -14,12 +14,13 @@
 	<script>
 $.mobile.document
 
-	// The custom selectmenu plugin generates an ID for the listview by suffixing the ID of the
-	// native widget with "-menu". Upon creation of the listview widget we want to place an
-	// input field before the list to be used for a filter.
-	.on( "listviewcreate", "#filter-menu-menu,#title-filter-menu-menu", function( event ) {
+	// Upon creation of the select menu, we want to make use of the fact that the ID of the
+	// listview it generates starts with the ID of the select menu itself, plus the suffix "-menu".
+	// We retrieve the listview and insert a search input before it.
+	.on( "selectmenucreate", "#filter-menu,#title-filter-menu,#filtertext", function( event ) {
 		var input,
-			list = $( event.target ),
+			selectmenu = $( event.target ),
+			list = $( "#" + selectmenu.attr( "id" ) + "-menu" ),
 			form = list.jqmData( "filter-form" );
 
 		// We store the generated form in a variable attached to the popup so we avoid creating a
@@ -36,12 +37,19 @@ $.mobile.document
 			form.jqmData( "listview", list );
 		}
 
-		// Instantiate a filterable widget on the newly created listview and indicate that the
-		// generated input form element is to be used for the filtering.
-		list.filterable({
-			input: input,
-			children: "> li:not(:jqmData(placeholder='true'))"
-		});
+		// Instantiate a filterable widget on the newly created selectmenu widget and indicate that
+		// the generated input form element is to be used for the filtering.
+		selectmenu
+			.filterable({
+				input: input,
+				children: "> option[value]"
+			})
+
+			// Rebuild the custom select menu's list items to reflect the results of the filtering
+			// done on the select menu.
+			.on( "filterablefilter", function() {
+				selectmenu.selectmenu( "refresh" );
+			});
 	})
 
 	// The custom select list may show up as either a popup or a dialog, depending on how much
@@ -52,7 +60,9 @@ $.mobile.document
 		var listview, form,
 			id = data.toPage && data.toPage.attr( "id" );
 
-		if ( !( id === "filter-menu-dialog" || id === "title-filter-menu-dialog" ) ) {
+		if ( !( id === "filter-menu-dialog" ||
+				id === "title-filter-menu-dialog" ||
+				id === "filtertext-dialog" ) ) {
 			return;
 		}
 
@@ -71,13 +81,15 @@ $.mobile.document
 	// After the dialog is closed, the form containing the filter input is returned to the popup.
 	.on( "pagecontainerhide", function( event, data ) {
 		var listview, form,
-			id = data.toPage && data.toPage.attr( "id" );
+			id = data.prevPage && data.prevPage.attr( "id" );
 
-		if ( !( id === "filter-menu-dialog" || id === "title-filter-menu-dialog" ) ) {
+		if ( !( id === "filter-menu-dialog" ||
+				id === "title-filter-menu-dialog" ||
+				id === "filtertext-dialog" ) ) {
 			return;
 		}
 
-		listview = data.toPage.jqmData( "listview" ),
+		listview = data.prevPage.jqmData( "listview" ),
 		form = listview.jqmData( "filter-form" );
 
 		// Put the form back in the popup. It goes ahead of the listview.
@@ -120,33 +132,54 @@ $.mobile.document
     <h1>Filterable inside custom select</h1>
 
 		<p>
-		This examples shows how you can filter the list inside a custom select menu.
+		These examples show how you can filter the list inside a custom select menu.
 		</p>
 
-		<p>You can create an input field and prepend it to the popup and/or the dialog used by the custom select menu list and you can use it to filter items inside the list by instantiating a filterable widget on the list.</p>
+		<p>You can create an input field and prepend it to the popup and/or the dialog used by the custom select menu list and you can use it to filter items inside the list by instantiating a filterable widget on the select menu.</p>
+
+		<h2>Examples</h2>
 
 		<div data-demo-html="true" data-demo-js="true" data-demo-css="true">
 			<form>
-				<select id="filter-menu" data-native-menu="false">
-					<option value="SFO">San Francisco</option>
-					<option value="LAX">Los Angeles</option>
-					<option value="YVR">Vancouver</option>
-					<option value="YYZ">Toronto</option>
-				</select>
+				<div class="ui-field-contain">
+					<label for="filter-menu">Basic:</label>
+					<select id="filter-menu" data-native-menu="false">
+						<option value="SFO">San Francisco</option>
+						<option value="LAX">Los Angeles</option>
+						<option value="YVR">Vancouver</option>
+						<option value="YYZ">Toronto</option>
+					</select>
+				</div>
 			</form>
 		</div>
 
-		<p>You can also handle custom menus with placeholder items:</p>
+		<div data-demo-html="true" data-demo-js="true" data-demo-css="true">
+			<form>
+				<div class="ui-field-contain">
+					<label for="title-filter-menu">Placeholder:</label>
+					<select id="title-filter-menu" data-native-menu="false">
+						<option>Select fruit...</option>
+						<option value="orange">Orange</option>
+						<option value="apple">Apple</option>
+						<option value="peach">Peach</option>
+						<option value="lemon">Lemon</option>
+					</select>
+				</div>
+			</form>
+		</div>
 
 		<div data-demo-html="true" data-demo-js="true" data-demo-css="true">
 			<form>
-				<select id="title-filter-menu" data-native-menu="false">
-					<option>Select fruit...</option>
-					<option value="orange">Orange</option>
-					<option value="apple">Apple</option>
-					<option value="peach">Peach</option>
-					<option value="lemon">Lemon</option>
-				</select>
+				<div class="ui-field-contain">
+					<label for="filtertext">Filter text:</label>
+					<select id="filtertext" data-native-menu="false">
+						<option>Select fruit...</option>
+						<option value="orange" data-filtertext="Florida">Orange</option>
+						<option value="apple">Apple</option>
+						<option value="peach">Peach</option>
+						<option value="lemon">Lemon</option>
+					</select>
+				</div>
 			</form>
 		</div>
 
