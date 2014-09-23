@@ -14,6 +14,13 @@ define( [ "jquery",
 
 $.widget( "mobile.page", $.mobile.page, {
 	options: {
+		classes: {
+
+			// ui-dialog and ui-dialog-contain are leftovers from the dialog widget
+			// As such, they are deprecated as of 1.5.0 and will be removed in 1.6.0
+			"ui-page-dialog": "ui-dialog",
+			"ui-page-dialog-contain": "ui-dialog-contain"
+		},
 
 		// Accepts left, right and none
 		closeBtn: "left",
@@ -43,12 +50,12 @@ $.widget( "mobile.page", $.mobile.page, {
 
 		// Class the markup for dialog styling and wrap interior
 		if ( this.options.dialog ) {
-			this.element.addClass( "ui-dialog" )
+			this.element.addClass( this._classes( "ui-page-dialog" ) )
 				.wrapInner( $( "<div/>", {
 
 					// ARIA role
 					"role" : "dialog",
-					"class" : "ui-dialog-contain ui-overlay-shadow" +
+					"class" : this._classes( "ui-page-dialog-contain" ) + " ui-overlay-shadow" +
 						( this.options.corners ? " ui-corner-all" : "" )
 				}));
 		}
